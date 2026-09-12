@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Amnesia — Calculadora Científica</title>
+<link rel="icon" type="image/png" href="images/iconquag.png" id="faviconLink">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Fredoka:wght@400;500;600;700&family=Space+Mono:wght@400;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<!-- cenário decorativo do rio (ondas; os bancos curvos viraram o cabeçalho/rodapé) -->
+<div class="river-scene" id="riverScene" aria-hidden="true">
+  <div class="wave-layer w1"></div>
+  <div class="wave-layer w2"></div>
+  <!-- goomy anda no ambiente a partir do nível 2 -->
+  <div class="env-walker" id="goomyWalker">
+    <img src="images/goomy.png" alt="Goomy andando" data-species="Goomy" data-color="#9C6DC4" onerror="handleImgError(this)">
+  </div>
+</div>
+
+<!-- barra de música: aparece em qualquer aba -->
+<div class="music-control">
+  <button id="musicToggle" title="Tocar/pausar música">🔇</button>
+  <input type="range" id="volumeSlider" min="0" max="100" value="50" title="Volume">
+  <audio id="bgMusic" src="audio/musicacalc.mp3" loop preload="auto"></audio>
+</div>
+
+<!-- ===================== CABEÇALHO (cor/curva do antigo banco de cima) ===================== -->
+<header class="hero">
+  <img class="hero-icon" src="images/quag.png" alt="Quagsire" data-species="Quagsire" data-color="#7C9FC4" onerror="handleImgError(this)">
+  <div class="hero-text">
+    <h1 class="title">AMNESIA</h1>
+    <p class="subtitle">calculadora científica — use Amnesia com sabedoria</p>
+  </div>
+</header>
+
+<div class="stage">
+  <div class="console">
+    <div class="tabs">
+      <button class="tab-btn active" data-tab="calc" onclick="switchTab('calc')">Calculadora</button>
+      <button class="tab-btn" data-tab="game" onclick="switchTab('game')">Jogo do Quagsire</button>
+    </div>
+
+    <!-- ===================== CALCULATOR PANEL ===================== -->
+    <div class="panel active" id="panel-calc">
+      <!-- quagsire no canto da calculadora -->
+      <img class="calc-corner-icon" src="images/wooper.png" alt="Quagsire" data-species="Quagsire" data-color="#7C9FC4">
+      <div class="display">
+        <div class="prev" id="calcPrev">&nbsp;</div>
+        <div class="curr" id="calcCurr">0</div>
+      </div>
+      <div class="mode-row">
+        <button class="mode-btn active" id="degBtn" onclick="setAngleMode('deg')">DEG</button>
+        <button class="mode-btn" id="radBtn" onclick="setAngleMode('rad')">RAD</button>
+      </div>
+      <div class="keys">
+        <button class="key fn" onclick="unary('sin')">sin</button>
+        <button class="key fn" onclick="unary('cos')">cos</button>
+        <button class="key fn" onclick="unary('tan')">tan</button>
+        <button class="key fn" onclick="insertConst('pi')">π</button>
+        <button class="key fn" onclick="unary('fact')">n!</button>
+        <button class="key fn" onclick="unary('sqrt')">√</button>
+        <button class="key fn" onclick="unary('log')">log</button>
+        <button class="key clear" onclick="clearAll()">C</button>
+        <button class="key fn" onclick="unary('fib')">Fib</button>
+        <button class="key fn" onclick="unary('euler')">eˣ</button>
+        <button class="key op" onclick="setOp('^')">^</button>
+        <button class="key clear" onclick="backspace()">⌫</button>
+        <button class="key" onclick="digit('7')">7</button>
+        <button class="key" onclick="digit('8')">8</button>
+        <button class="key" onclick="digit('9')">9</button>
+        <button class="key op" onclick="setOp('÷')">÷</button>
+        <button class="key" onclick="digit('4')">4</button>
+        <button class="key" onclick="digit('5')">5</button>
+        <button class="key" onclick="digit('6')">6</button>
+        <button class="key op" onclick="setOp('×')">×</button>
+        <button class="key" onclick="digit('1')">1</button>
+        <button class="key" onclick="digit('2')">2</button>
+        <button class="key" onclick="digit('3')">3</button>
+        <button class="key op" onclick="setOp('-')">-</button>
+        <button class="key" onclick="toggleSign()">±</button>
+        <button class="key" onclick="digit('0')">0</button>
+        <button class="key" onclick="digit('.')">.</button>
+        <button class="key op" onclick="setOp('+')">+</button>
+        <button class="key eq wide" onclick="equals()">=</button>
+        <button class="key wide" onclick="unary('percent')">%</button>
+      </div>
+      <p class="hint">n! e Fib usam o número mostrado no visor · log é base 10 · sin/cos/tan respeitam DEG/RAD</p>
+    </div>
+
+    <!-- ===================== GAME PANEL ===================== -->
+    <div class="panel" id="panel-game">
+      <div class="level-row">
+        <span id="levelLabel">Nível 1</span>
+        <span id="bonusTag" class="bonus-tag" style="display:none;">PERGUNTA BÔNUS</span>
+      </div>
+      <div class="quagsire-box">
+        <div class="quagsire-wrap" id="quagsireWrap">
+          <span class="q-mark">?</span>
+          <span class="q-mark">?</span>
+          <span class="q-mark">?</span>
+          <img id="quagsireImg" src="images/quagsire-amnesia.png" alt="Quagsire usando Amnesia" data-species="Quagsire" data-color="#7C9FC4">
+        </div>
+        <div class="speech" id="quagsireSpeech">Bem-vindo(a) ao rio! Eu sou o Quagsire. Vamos jogar?</div>
+      </div>
+      <!-- pokémon que reagem ao acerto (magikarp nível 1 / finizen nível 2+) -->
+      <div class="jump-zone" id="jumpZone">
+        <img id="jumpImg" class="jump-sprite" src="images/magikarp-jump.png" alt="" data-species="Magikarp" data-color="#F3877A">
+      </div>
+      <div class="lives" id="livesRow"></div>
+      <div class="score-row">
+        <span id="scoreLabel">Pontos: 0</span>
+        <span id="bestLabel">Recorde: 0</span>
+      </div>
+      <div id="gameActive">
+        <div class="question-box">
+          <div class="equation" id="equationDisplay">carregando…</div>
+        </div>
+        <div class="answer-row">
+          <input type="number" id="answerInput" placeholder="qual é o ?" inputmode="decimal">
+          <button onclick="submitAnswer()">Responder</button>
+        </div>
+        <div class="feedback" id="feedback">&nbsp;</div>
+      </div>
+      <div id="gameOverBox" class="game-over" style="display:none;">
+        <img class="game-over-icon" src="images/quagsire-happy.png" alt="Quagsire parabenizando" data-species="Quagsire" data-color="#7C9FC4">
+        <h3>Parabéns, você chegou até aqui!</h3>
+        <p>Pontuação final: <strong id="finalScore">0</strong></p>
+        <button onclick="startGame()">Jogar novamente</button>
+      </div>
+    </div>
+  </div>
+</div>
+
+<!-- ===================== RODAPÉ (cor/curva do antigo banco de baixo) ===================== -->
+<footer class="site-footer">
+  <p>Amnesia — calculadora científica do rio 🐟</p>
+</footer>
+
+<script src="script.js"></script>
+</body>
+</html>
